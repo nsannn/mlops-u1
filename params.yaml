@@ -1,0 +1,12 @@
+prepare:
+  test_size: 0.2
+  seed: 42
+train:
+  hf_model: prajjwal1/bert-mini
+  hf_revision: 5e123abc2480f0c4b4cac186d3b3f09299c258fc
+  num_labels: 2
+  learning_rate: 0.0001
+  epochs: 2
+  batch_size: 32
+  max_length: 32
+  random_seed: 42
