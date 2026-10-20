@@ -46,8 +46,8 @@ def main(run_id: str) -> None:
             print(f"{m}: old={old.data.metrics[m]:.4f} new={new.data.metrics[m]:.4f} delta={d:.4f}")
             assert d <= TOL, f"{m} delta {d:.4f} > {TOL}"
     finally:
-        sh("git", "checkout", "-q", "--", ".")  # drop the repro edits
-        sh("git", "checkout", "-q", branch)
+        # -f drops the repro edits and overwrites files that were untracked at the old commit (dvc.lock)
+        sh("git", "checkout", "-q", "-f", branch)
         sh("dvc", "checkout", "--force")
     print(f"Reproduced {run_id} as {new_id} in {time.time() - t0:.1f} s")
 
