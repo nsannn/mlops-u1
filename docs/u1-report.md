@@ -1,83 +1,47 @@
 # U1 report — question vs keyword query classifier
 
-_Draft: evidence from Step 5 (2026-10-21). Summary, problems and time spent are completed in Step 6._
+Nojus Sandovas · 2026-10-21 · repo https://github.com/nsannn/mlops-u1, tag `u1-final`
 
-## Experiments on the cluster MLflow server
+## What was done
 
-Experiment `question-detection` on `http://localhost:5000` (MLflow in the `kind` cluster, namespace `mlops`).
-Model `prajjwal1/bert-mini` @ `5e123abc`, data sample md5 `a09b3309d69993fe85e0a50297eb573b`, 8 000 train / 2 000 test rows.
-
-| Run ID | Commit | learning_rate | max_length | epochs | accuracy | macro F1 | MLflow run | `dvc repro` wall |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `ac008c53` | `3ab189b` exp 1 | 1e-4 | 32 | 2 | 0.9960 | 0.9960 | 66.2 s | 83.9 s |
-| `514d40c0` | `7059669` exp 2 | 3e-5 | 32 | 2 | **0.9970** | **0.9970** | 66.0 s | 79.1 s |
-| `f419d8eb` | `dce8bb4` exp 3 | 1e-4 | 16 | 2 | 0.9945 | 0.9945 | 41.7 s | 53.8 s |
-| `4d690bf7` | reproduction of `ac008c53` | 1e-4 | 32 | 2 | 0.9960 | 0.9960 | 66.3 s | 82.8 s |
-
-MLflow run = training + evaluation + model logging (NFR-03 target ≤ 60 s: missed at `max_length` 32, met at 16).
-
-Every run carries `git_commit`, `dvc_raw_md5`, the dataset digest (`log_input`), `eval/*` metrics,
-a `train_loss` curve and a LoggedModel (`m-…`) stored as `mlflow-artifacts:/…` on the cluster PVC.
-Best run: exp 2 (lower learning rate). Halving `max_length` costs 0.15 pp accuracy but trains 36 % faster.
-
-```text
-$ dvc params diff HEAD~2          $ dvc metrics diff HEAD~2
-train.max_length  32 -> 16        accuracy  0.996 -> 0.9945  (-0.0015)
-```
-
-## NFR-08 — reproduction
-
-```text
-$ time python reproduce.py ac008c53959c423ab68b62ee2e7170d8
-+ git checkout -q 4b3bb5e3
-+ dvc checkout --force data/raw/dataset.parquet.dvc
-+ dvc repro --force
-accuracy: old=0.9960 new=0.9960 delta=0.0000
-f1: old=0.9960 new=0.9960 delta=0.0000
-+ git checkout -q -f main
-+ dvc checkout --force
-Reproduced ac008c53959c423ab68b62ee2e7170d8 as 4d690bf73f3943c888a3acae82043881 in 81.7 s
-```
-
-Result: **81.7 s < 120 s**, Δaccuracy = 0.0000 ≤ 0.005. The new run is tagged `reproduces=ac008c53…`.
-CPU + fixed seed + deterministic algorithms + 4 threads gives bit-identical metrics.
-
-## NFR-09 / NFR-10 — lineage
-
-All 4 runs have `git_commit` and `dvc_raw_md5` tags (100 %). `dvc.lock` records raw-data md5
-`a09b3309d69993fe85e0a50297eb573b`, equal to every run's `dvc_raw_md5` tag (100 %).
-
-## NFR-15 — persistence after pod recreation
-
-```text
-$ kubectl delete pod -n mlops -l app=mlflow ; kubectl delete pod -n mlops -l app=postgres
-$ kubectl wait --for=condition=Available deploy --all -n mlops
-mlflow-69f75d6fd4-9mvh6    1/1  Running  0  22s      # new pods
-postgres-5cd6cf5f9-qtr84   1/1  Running  0  22s
-```
-
-After the restart all 4 runs, their params, metrics, tags and LoggedModels were still served
-(174 MB under `/mlartifacts`). Metadata lives on PVC `postgres-data`, files on PVC `mlflow-artifacts`;
-both are `local-path` volumes under `/var/local-path-provisioner/` in the `mlops-control-plane` container.
-
-## Cluster state
-
-```text
-$ kubectl get all,pvc -n mlops
-pod/mlflow-…    1/1 Running      deployment.apps/mlflow    1/1     service/mlflow    NodePort  5000:30500/TCP
-pod/postgres-…  1/1 Running      deployment.apps/postgres  1/1     service/postgres  ClusterIP 5432/TCP
-persistentvolumeclaim/mlflow-artifacts  Bound  5Gi  RWO  standard
-persistentvolumeclaim/postgres-data     Bound  2Gi  RWO  standard
-```
-
-## Problems met so far
-
-| Problem | Cause | Fix |
+| Req. | Result | Evidence |
 | --- | --- | --- |
-| Tokenizer/model failed to load | `prajjwal1/bert-mini` config has no `model_type`, so `Auto*` classes fail | Explicit `BertTokenizerFast` / `BertForSequenceClassification` |
-| `log_model` crashed (`No module named 'torchvision'`) | MLflow dependency inference with CPU-only torch | Pass `pip_requirements=requirements-train.txt` |
-| `reproduce.py` failed on old commits | Old commit had no `dvc.lock`; restore failed on untracked `dvc.lock` | Check out only raw-data `.dvc` pointers; restore with `git checkout -f` |
-| MLflow init container never finished | UID 1000 has no passwd entry, so `pg_isready` could not pick a user | `pg_isready -U mlflow` |
-| MLflow crashed: `No module named 'psycopg'` | SQLAlchemy 2.1 maps `postgresql://` to psycopg v3 | URI `postgresql+psycopg2://` |
-| MLflow `OOMKilled` at 2 GiB | Default multiple server workers | `--workers=1`, limit 3 GiB (uses ~1.7 GB) |
-| `cryptography` HIGH CVE not fixable | `mlflow==3.15.2` pins `cryptography<50` | Documented as accepted risk |
+| R1 Repo + requirements | `src/ docker/ k8s/ docs/`; README run-from-zero (rehearsed from a fresh clone, 195 s); `requirements.md` v1.4: 5 FR, 17 NFR with KPI, reproduction NFR-08..10 | [README](../README.md), [requirements](requirements.md) |
+| R2 Reproducible pipeline | `dvc.yaml` prepare → train → evaluate, `params.yaml`, `dvc.lock` committed, DVC local remote synced; 3 runs with different hyperparameters (best accuracy 0.997); `reproduce.py` 81.7 s, Δ 0.0000 | [evidence](evidence.md) |
+| R3 Docker image | Multi-stage, non-root (UID 1000), `ghcr.io/nsannn/mlops-u1/train:sha-474a8cd`, 1 982 MB, Trivy 0 CRITICAL / 46 HIGH reviewed, SBOM | [image-size](image-size.md), [security-scan](security-scan.md) |
+| R4 Cluster + MLflow | `kind` cluster from `k8s/kind-config.yaml`, namespace `mlops`, PostgreSQL + MLflow Deployments with PVCs, NodePort → `localhost:5000`; laptop runs stored on the cluster; data survives pod deletion | [k8s/](../k8s/), [architecture](architecture.md), [evidence](evidence.md) |
+| Extensions | None yet (E1–E3 planned) | — |
+
+Model: `prajjwal1/bert-mini` (11M params) fine-tuned on CPU on a seeded 10k sample of Kaggle
+*Quora Question Keyword Pairs* (license listed as Unknown, coursework only). The published
+`shahrukhx01/bert-mini-finetune-question-detection` (0.997) is the reference; our best run matches it.
+
+## What did not work at first
+
+| Problem | Fix |
+| --- | --- |
+| `Auto*` classes could not load bert-mini (config has no `model_type`) | Explicit `BertTokenizerFast` / `BertForSequenceClassification` |
+| `mlflow.transformers.log_model` needed `torchvision` with CPU-only torch | Pass `pip_requirements=requirements-train.txt` |
+| `reproduce.py` failed on commits without `dvc.lock`, then left a detached HEAD | Check out only raw-data `.dvc` pointers; restore with `git checkout -f` |
+| MLflow init container hung: `pg_isready` had no user for UID 1000 | `pg_isready -U mlflow` |
+| `No module named 'psycopg'`: SQLAlchemy 2.1 maps `postgresql://` to psycopg v3 | `postgresql+psycopg2://` URI |
+| MLflow `OOMKilled` at 2 GiB (several server workers) | `--workers=1`, 3 GiB limit (uses ~1.7 GB) |
+| NFR-03 missed: 66 s run at `max_length` 32 | Default `max_length` 16: 42 s, accuracy 0.9945 |
+| Not fixed: `cryptography` HIGH CVE — `mlflow==3.15.2` pins `cryptography<50` | Documented as accepted risk |
+
+Open: the GHCR package must be switched to public by hand (no API for it); the image is 1.98 GB,
+right at its 2 GB target (torch CPU dominates).
+
+## Time spent
+
+| Part | Time |
+| --- | --- |
+| Tool setup, repo, model/data choice (20 Oct evening) | ~1.5 h |
+| R1 repo + requirements | ~0.3 h |
+| R2 pipeline, debugging, reproduction | ~0.5 h |
+| R3 image, scan, GHCR | ~0.3 h |
+| R4 cluster + MLflow, debugging | ~0.5 h |
+| Graded runs, evidence, README rehearsal, report | ~0.7 h |
+| **Total** | **~3.8 h** |
+
+Times from commit timestamps (21 Oct 00:23–01:40) plus the setup evening; adjust if your own count differs.

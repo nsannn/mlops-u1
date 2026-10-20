@@ -10,8 +10,8 @@ questions/statements from keyword queries, logging every run to an MLflow server
 | Repo + tag | https://github.com/nsannn/mlops-u1 · tag `u1-final` |
 | Requirements | [docs/requirements.md](docs/requirements.md) |
 | Training image (GHCR) | [`ghcr.io/nsannn/mlops-u1/train:sha-474a8cd`](https://github.com/users/nsannn/packages/container/package/mlops-u1%2Ftrain) · [size](docs/image-size.md) · [Trivy scan](docs/security-scan.md) |
-| Kubernetes manifests | [k8s/](k8s/) |
-| Report | [docs/u1-report.md](docs/u1-report.md) |
+| Kubernetes manifests | [k8s/](k8s/) · [architecture](docs/architecture.md) |
+| Report (1 page) | [docs/u1-report.md](docs/u1-report.md) · [evidence](docs/evidence.md) |
 
 ## Run from zero
 
@@ -53,6 +53,11 @@ Prerequisites: WSL2 Ubuntu, Docker Desktop (WSL integration on), `uv`, `kind`, `
    python reproduce.py <run_id>             # re-creates a run in < 2 min
    ```
 
+   Right after `dvc pull`, `dvc repro` skips every stage because the outputs already match `dvc.lock`;
+   use `dvc repro --force` to train again. Change a value in `params.yaml` and only `train` + `evaluate`
+   re-run. If MLflow is reached on a port other than 5000, add `localhost:<port>` to `--allowed-hosts`
+   in `k8s/mlflow.yaml`, otherwise the server answers `403 Invalid Host header`.
+
 5. **Tear down:** `kind delete cluster --name mlops` (this also deletes the PVC data).
 
 ## Layout
@@ -78,5 +83,6 @@ Prerequisites: WSL2 Ubuntu, Docker Desktop (WSL integration on), `uv`, `kind`, `
 
 - Experiments: MLflow UI → experiment `question-detection`.
 - Latest metrics: [`metrics.json`](metrics.json); pipeline graph: `dvc dag`.
+- Evidence (runs, reproduction timing, persistence test, README rehearsal): [`docs/evidence.md`](docs/evidence.md).
 - Artifacts physically: PVC `mlflow-artifacts`, a `local-path` volume under `/var/local-path-provisioner/`
   inside the `mlops-control-plane` container. They survive pod restarts, but not `kind delete cluster`.

@@ -1,6 +1,6 @@
 # Requirements — question vs keyword query classifier
 
-Version: 1.3
+Version: 1.4
 Date: 2026-10-21
 Author: Nojus Sandovas
 
@@ -60,14 +60,15 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 
 | ID | Category | Requirement | KPI | Measurement / evidence |
 | --- | --- | --- | --- | --- |
-| NFR-08 | Reproducibility | Any historical run is re-created by `python reproduce.py <run_id>` | < 2 min, \|Δaccuracy\| ≤ 0.005 | `time python reproduce.py <id>` output in `docs/u1-report.md` |
+| NFR-08 | Reproducibility | Any historical run is re-created by `python reproduce.py <run_id>` | < 2 min, \|Δaccuracy\| ≤ 0.005 | `time python reproduce.py <id>` output in `docs/evidence.md` |
 | NFR-09 | Traceability | Runs carrying `git_commit` and `dvc_raw_md5` tags | 100 % of runs | MLflow UI filter |
 | NFR-10 | Data version | `dvc.lock` raw-data md5 equals the run's `dvc_raw_md5` tag | 100 % of runs | Compared live in the demo |
 
-Measured 2026-10-21 ([`u1-report.md`](u1-report.md)): NFR-08 reproduction 81.7 s, Δaccuracy 0.0000; NFR-09 and
+Measured 2026-10-21 ([`evidence.md`](evidence.md)): NFR-08 reproduction 81.7 s, Δaccuracy 0.0000; NFR-09 and
 NFR-10 100 % of 4 runs. NFR-01/02: best run accuracy 0.997, macro F1 0.997. NFR-03: MLflow run duration
 (training + evaluation + model logging) is 66 s at `max_length` 32 — **misses the 60 s target by 6 s** — and 42 s at
-`max_length` 16. Options: accept 16 as default, or raise the target to 75 s with this justification.
+`max_length` 16. Decision: `max_length: 16` is the default in `params.yaml` (exp 3), which meets NFR-03 at a
+0.15 pp accuracy cost (0.9945 vs 0.9960, still ≥ NFR-01's 0.95).
 
 ### 3.2 Containerisation (v1.2)
 
@@ -82,7 +83,7 @@ NFR-10 100 % of 4 runs. NFR-01/02: best run accuracy 0.997, macro F1 0.997. NFR-
 
 | ID | Category | Requirement | KPI | Measured (2026-10-21) | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| NFR-15 | Durability | MLflow runs and artifacts after deleting the MLflow and PostgreSQL pods | 100 % kept | 100 % (test run + artifact intact) | `kubectl delete pod` test, `docs/u1-report.md` |
+| NFR-15 | Durability | MLflow runs and artifacts after deleting the MLflow and PostgreSQL pods | 100 % kept | 100 % (test run + artifact intact) | `kubectl delete pod` test, `docs/evidence.md` |
 | NFR-16 | Availability | MLflow ready after `kubectl apply` (images present) | ≤ 120 s | 22 s | `kubectl wait --for=condition=Available` |
 | NFR-17 | Tracking | Runs logged from the laptop are stored on the cluster server | 100 %, no local `mlruns/` | Artifact URIs `mlflow-artifacts:/…` | MLflow UI |
 
@@ -120,3 +121,4 @@ NFR-10 100 % of 4 runs. NFR-01/02: best run accuracy 0.997, macro F1 0.997. NFR-
 | 1.1 | 2026-10-21 | Nojus Sandovas | MLflow + DVC pipeline: reproduction and traceability NFR-08..10 |
 | 1.2 | 2026-10-21 | Nojus Sandovas | Training image on GHCR: container NFR-11..14 with measured values |
 | 1.3 | 2026-10-21 | Nojus Sandovas | kind cluster with PostgreSQL + MLflow: NFR-15..17 |
+| 1.4 | 2026-10-21 | Nojus Sandovas | Measured results for all NFRs; NFR-03 decision (default max_length 16) |
