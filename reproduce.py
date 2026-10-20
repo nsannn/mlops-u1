@@ -30,7 +30,10 @@ def main(run_id: str) -> None:
     new_id = None
     try:
         sh("git", "checkout", "-q", old.data.tags["git_commit"])  # 1. code + pointers at that time
-        sh("dvc", "checkout", "--force")  # 2. same data bytes from the local cache
+        # 2. same raw-data bytes from the local cache; only *.dvc pointers, because that commit
+        #    may predate dvc.lock and repro --force rebuilds every stage output anyway
+        pointers = [str(p.relative_to(ROOT)) for p in ROOT.glob("data/raw/*.dvc")]
+        sh("dvc", "checkout", "--force", *pointers)
         params = yaml.safe_load((ROOT / "params.yaml").read_text())  # 3. run params -> params.yaml
         params["train"].update({k: yaml.safe_load(v) for k, v in old.data.params.items()
                                 if k in params["train"]})
