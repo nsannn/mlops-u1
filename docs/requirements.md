@@ -1,6 +1,6 @@
 # Requirements — question vs keyword query classifier
 
-Version: 1.2
+Version: 1.3
 Date: 2026-10-21
 Author: Nojus Sandovas
 
@@ -73,6 +73,14 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | NFR-13 | Security | Container runtime user | UID ≠ 0 | UID 1000 | `docker run --rm <image> id -u` |
 | NFR-14 | Traceability | Published image tags | 100 % `sha-<commit>`, never `latest` | `sha-474a8cd` only | GHCR package page |
 
+### 3.3 Kubernetes and MLflow server (v1.3)
+
+| ID | Category | Requirement | KPI | Measured (2026-10-21) | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| NFR-15 | Durability | MLflow runs and artifacts after deleting the MLflow and PostgreSQL pods | 100 % kept | 100 % (test run + artifact intact) | `kubectl delete pod` test, `docs/u1-report.md` |
+| NFR-16 | Availability | MLflow ready after `kubectl apply` (images present) | ≤ 120 s | 22 s | `kubectl wait --for=condition=Available` |
+| NFR-17 | Tracking | Runs logged from the laptop are stored on the cluster server | 100 %, no local `mlruns/` | Artifact URIs `mlflow-artifacts:/…` | MLflow UI |
+
 ## 4. KPI summary
 
 - Model: accuracy ≥ 0.95, macro F1 ≥ 0.95 (NFR-01, NFR-02).
@@ -106,3 +114,4 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | 1.0 | 2026-10-21 | Nojus Sandovas | Initial requirements: scope, FR-01..05, NFR-01..07 |
 | 1.1 | 2026-10-21 | Nojus Sandovas | MLflow + DVC pipeline: reproduction and traceability NFR-08..10 |
 | 1.2 | 2026-10-21 | Nojus Sandovas | Training image on GHCR: container NFR-11..14 with measured values |
+| 1.3 | 2026-10-21 | Nojus Sandovas | kind cluster with PostgreSQL + MLflow: NFR-15..17 |

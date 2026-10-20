@@ -1,0 +1,32 @@
+# PostgreSQL = MLflow metadata store (runs, params, metrics, tags).
+# Credentials come from Secret mlflow-db, created by a command (README), never committed.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: {name: postgres-data, namespace: mlops}
+spec: {accessModes: [ReadWriteOnce], resources: {requests: {storage: 2Gi}}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: postgres, namespace: mlops}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}          # RWO volume: never two pods at once
+  selector: {matchLabels: {app: postgres}}
+  template:
+    metadata: {labels: {app: postgres}}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16.4-alpine
+          envFrom: [{secretRef: {name: mlflow-db}}]
+          env: [{name: PGDATA, value: /var/lib/postgresql/data/pgdata}]
+          ports: [{containerPort: 5432}]
+          readinessProbe: {exec: {command: [pg_isready, -U, mlflow]}, periodSeconds: 5}
+          resources: {requests: {cpu: 100m, memory: 256Mi}, limits: {cpu: "1", memory: 1Gi}}
+          volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes: [{name: data, persistentVolumeClaim: {claimName: postgres-data}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: postgres, namespace: mlops}
+spec: {selector: {app: postgres}, ports: [{port: 5432, targetPort: 5432}]}

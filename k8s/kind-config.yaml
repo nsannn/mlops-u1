@@ -1,0 +1,10 @@
+# Local cluster as code: kind create cluster --config k8s/kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: mlops
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30500   # NodePort of the mlflow Service
+        hostPort: 5000         # -> http://localhost:5000 on the laptop
+        protocol: TCP
