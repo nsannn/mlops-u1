@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+
+# Secrets (never commit)
+.env
+basic_auth.ini
+
+# Local MLflow stores (graded runs live on the cluster server)
+mlruns/
+mlflow.db
+mlartifacts/
+
+# Raw Kaggle download; DVC tracks the sampled parquet instead
+data/kaggle/
+
+# DVC local-only config (credentials)
+.dvc/config.local

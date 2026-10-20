@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+mlflow==3.15.2
+dvc==3.67.1
+torch
+transformers
+kaggle
+scikit-learn
+pandas
+pyarrow
+pyyaml
