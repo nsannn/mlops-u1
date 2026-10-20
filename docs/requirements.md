@@ -1,6 +1,6 @@
 # Requirements — question vs keyword query classifier
 
-Version: 1.0
+Version: 1.1
 Date: 2026-10-21
 Author: Nojus Sandovas
 
@@ -56,6 +56,14 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | NFR-06 | Data | Training sample is reproducible from the pinned source | Same md5 on every fetch with seed 42 | `dvc add` md5 vs `.dvc` file |
 | NFR-07 | Security | Secrets in Git (Kaggle token, DB passwords) | 0 | `git ls-files` review before tagging |
 
+### 3.1 Experiment tracking and reproducibility (v1.1)
+
+| ID | Category | Requirement | KPI | Measurement / evidence |
+| --- | --- | --- | --- | --- |
+| NFR-08 | Reproducibility | Any historical run is re-created by `python reproduce.py <run_id>` | < 2 min, \|Δaccuracy\| ≤ 0.005 | `time python reproduce.py <id>` output in `docs/u1-report.md` |
+| NFR-09 | Traceability | Runs carrying `git_commit` and `dvc_raw_md5` tags | 100 % of runs | MLflow UI filter |
+| NFR-10 | Data version | `dvc.lock` raw-data md5 equals the run's `dvc_raw_md5` tag | 100 % of runs | Compared live in the demo |
+
 ## 4. KPI summary
 
 - Model: accuracy ≥ 0.95, macro F1 ≥ 0.95 (NFR-01, NFR-02).
@@ -87,3 +95,4 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | Version | Date | Author | Changes |
 | --- | --- | --- | --- |
 | 1.0 | 2026-10-21 | Nojus Sandovas | Initial requirements: scope, FR-01..05, NFR-01..07 |
+| 1.1 | 2026-10-21 | Nojus Sandovas | MLflow + DVC pipeline: reproduction and traceability NFR-08..10 |
