@@ -64,6 +64,11 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | NFR-09 | Traceability | Runs carrying `git_commit` and `dvc_raw_md5` tags | 100 % of runs | MLflow UI filter |
 | NFR-10 | Data version | `dvc.lock` raw-data md5 equals the run's `dvc_raw_md5` tag | 100 % of runs | Compared live in the demo |
 
+Measured 2026-10-21 ([`u1-report.md`](u1-report.md)): NFR-08 reproduction 81.7 s, Δaccuracy 0.0000; NFR-09 and
+NFR-10 100 % of 4 runs. NFR-01/02: best run accuracy 0.997, macro F1 0.997. NFR-03: MLflow run duration
+(training + evaluation + model logging) is 66 s at `max_length` 32 — **misses the 60 s target by 6 s** — and 42 s at
+`max_length` 16. Options: accept 16 as default, or raise the target to 75 s with this justification.
+
 ### 3.2 Containerisation (v1.2)
 
 | ID | Category | Requirement | KPI | Measured (2026-10-21) | Evidence |
