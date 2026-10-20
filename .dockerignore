@@ -1,0 +1,16 @@
+# Keep the build context small and free of secrets
+.git
+.venv
+.dvc/cache
+.dvc/tmp
+.env
+basic_auth.ini
+mlruns
+mlartifacts
+*.db
+__pycache__
+models/
+data/kaggle/
+data/raw/*.parquet
+docs/
+k8s/
