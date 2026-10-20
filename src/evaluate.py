@@ -6,7 +6,7 @@ import mlflow
 import pandas as pd
 import yaml
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import BertForSequenceClassification, BertTokenizerFast
 
 from model_utils import predict, setup_determinism
 
@@ -16,8 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     p = yaml.safe_load((ROOT / "params.yaml").read_text())["train"]
     setup_determinism(int(p["random_seed"]))
-    tok = AutoTokenizer.from_pretrained(ROOT / "models/model")
-    model = AutoModelForSequenceClassification.from_pretrained(ROOT / "models/model")
+    tok = BertTokenizerFast.from_pretrained(ROOT / "models/model")
+    model = BertForSequenceClassification.from_pretrained(ROOT / "models/model")
     test = pd.read_parquet(ROOT / "data/processed/test.parquet")
     y, preds = test["label"], predict(model, tok, test, int(p["max_length"]))
     metrics = {"accuracy": accuracy_score(y, preds),

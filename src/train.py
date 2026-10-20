@@ -14,7 +14,8 @@ import torch
 import yaml
 from sklearn.metrics import accuracy_score, f1_score
 from torch.utils.data import DataLoader
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+# Explicit BERT classes: prajjwal1/bert-mini's config.json has no model_type, so Auto* cannot resolve it.
+from transformers import BertForSequenceClassification, BertTokenizerFast
 
 from model_utils import encode, predict, setup_determinism
 
@@ -60,8 +61,8 @@ def main() -> None:
     setup_determinism(p["random_seed"])
     train = pd.read_parquet(ROOT / "data/processed/train.parquet")
     test = pd.read_parquet(ROOT / "data/processed/test.parquet")
-    tok = AutoTokenizer.from_pretrained(p["hf_model"], revision=p["hf_revision"])
-    model = AutoModelForSequenceClassification.from_pretrained(
+    tok = BertTokenizerFast.from_pretrained(p["hf_model"], revision=p["hf_revision"])
+    model = BertForSequenceClassification.from_pretrained(
         p["hf_model"], revision=p["hf_revision"], num_labels=p["num_labels"])
 
     mlflow.set_experiment(EXPERIMENT)
