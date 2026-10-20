@@ -49,20 +49,20 @@ stages:
           hf_model: prajjwal1/bert-mini
           hf_revision: 5e123abc2480f0c4b4cac186d3b3f09299c258fc
           num_labels: 2
-          learning_rate: 3e-05
+          learning_rate: 0.0001
           epochs: 2
           batch_size: 32
-          max_length: 32
+          max_length: 16
           random_seed: 42
     outs:
     - path: models/model
       hash: md5
-      md5: 056f200367c41937ee0ce0c3b9b140ed.dir
+      md5: 641e7600037b90796f54a36fd0076150.dir
       size: 45405383
       nfiles: 4
     - path: models/run_id.txt
       hash: md5
-      md5: 3e1bf4c4cc26ab3e1e73f6c2173a2915
+      md5: 0596cbfe4c934b6a901e7035827aa42e
       size: 33
   evaluate:
     cmd: python src/evaluate.py
@@ -73,12 +73,12 @@ stages:
       size: 68014
     - path: models/model
       hash: md5
-      md5: 056f200367c41937ee0ce0c3b9b140ed.dir
+      md5: 641e7600037b90796f54a36fd0076150.dir
       size: 45405383
       nfiles: 4
     - path: models/run_id.txt
       hash: md5
-      md5: 3e1bf4c4cc26ab3e1e73f6c2173a2915
+      md5: 0596cbfe4c934b6a901e7035827aa42e
       size: 33
     - path: src/evaluate.py
       hash: md5
@@ -91,5 +91,5 @@ stages:
     outs:
     - path: metrics.json
       hash: md5
-      md5: 043a966de5e20e546502d81565ee86e8
-      size: 104
+      md5: 9f3d6e6f2fa53a681757d44963e903c5
+      size: 120
