@@ -1,6 +1,6 @@
 # Requirements — question vs keyword query classifier
 
-Version: 1.1
+Version: 1.2
 Date: 2026-10-21
 Author: Nojus Sandovas
 
@@ -64,6 +64,15 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | NFR-09 | Traceability | Runs carrying `git_commit` and `dvc_raw_md5` tags | 100 % of runs | MLflow UI filter |
 | NFR-10 | Data version | `dvc.lock` raw-data md5 equals the run's `dvc_raw_md5` tag | 100 % of runs | Compared live in the demo |
 
+### 3.2 Containerisation (v1.2)
+
+| ID | Category | Requirement | KPI | Measured (2026-10-21) | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| NFR-11 | Size | Training image size | ≤ 2 000 MB | 1 982 MB — pass, little headroom | [`image-size.md`](image-size.md) |
+| NFR-12 | Security | CRITICAL CVEs in the published image | 0 | 0 (46 HIGH reviewed) | [`security-scan.md`](security-scan.md) |
+| NFR-13 | Security | Container runtime user | UID ≠ 0 | UID 1000 | `docker run --rm <image> id -u` |
+| NFR-14 | Traceability | Published image tags | 100 % `sha-<commit>`, never `latest` | `sha-474a8cd` only | GHCR package page |
+
 ## 4. KPI summary
 
 - Model: accuracy ≥ 0.95, macro F1 ≥ 0.95 (NFR-01, NFR-02).
@@ -96,3 +105,4 @@ self-hosted server in a local Kubernetes cluster, and a containerised training i
 | --- | --- | --- | --- |
 | 1.0 | 2026-10-21 | Nojus Sandovas | Initial requirements: scope, FR-01..05, NFR-01..07 |
 | 1.1 | 2026-10-21 | Nojus Sandovas | MLflow + DVC pipeline: reproduction and traceability NFR-08..10 |
+| 1.2 | 2026-10-21 | Nojus Sandovas | Training image on GHCR: container NFR-11..14 with measured values |

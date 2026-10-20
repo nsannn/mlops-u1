@@ -9,7 +9,7 @@ questions/statements from keyword queries, logging every run to an MLflow server
 | --- | --- |
 | Repo + tag | https://github.com/nsannn/mlops-u1 · tag `u1-final` |
 | Requirements | [docs/requirements.md](docs/requirements.md) |
-| Training image (GHCR) | _added in Step 3_ |
+| Training image (GHCR) | [`ghcr.io/nsannn/mlops-u1/train:sha-474a8cd`](https://github.com/users/nsannn/packages/container/package/mlops-u1%2Ftrain) · [size](docs/image-size.md) · [Trivy scan](docs/security-scan.md) |
 | Kubernetes manifests | [k8s/](k8s/) |
 | Report | [docs/u1-report.md](docs/u1-report.md) |
 
